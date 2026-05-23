@@ -241,6 +241,11 @@
             color: #7b1fa2;
         }
         
+        .badge-ou {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
         .shift-section {
             margin-top: 20px;
             padding: 20px;
@@ -311,7 +316,7 @@
 
     <script>
         let parsedData = {};
-        let currentFormat = 'text'; // 'text' 或 'table'
+        let currentFormat = 'table'; // 'text' 或 'table'，默认表格格式
         
         function setFormat(format) {
             currentFormat = format;
@@ -410,7 +415,7 @@
                 }
                 
                 // 提取业务办理（包含人员标记）
-                const businessMatch = line.match(/(.+?)[：:]\s*(\d+)([骆宝委]+)/);
+                const businessMatch = line.match(/(.+?)[：:]\s*(\d+)([骆宝委欧]+)/);
                 if (businessMatch && currentShift) {
                     const businessName = businessMatch[1].trim();
                     const count = parseInt(businessMatch[2]);
@@ -620,7 +625,7 @@
             text = text.trim().replace(/\s+/g, '');
             
             // 匹配模式：数字+人员标记（支持多个组合）
-            const pattern = /(\d+)\s*([骆宝委])/g;
+            const pattern = /(\d+)\s*([骆宝委欧])/g;
             let match;
             
             while ((match = pattern.exec(text)) !== null) {
@@ -665,95 +670,7 @@
                 </div>
             `;
             
-            // 各班次详情
-            html += '<div class="detail-section"><h2>📅 各班次详情</h2>';
-            data.shifts.forEach((shift, index) => {
-                html += `
-                    <div class="shift-section">
-                        <h3>${shift.name}</h3>
-                        <p><strong>总呼：</strong>${shift.totalCalls} | <strong>呼通：</strong>${shift.connectedCalls}</p>
-                `;
-                
-                if (shift.businesses.length > 0) {
-                    html += '<table><thead><tr><th>业务类型</th><th>数量</th><th>人员</th></tr></thead><tbody>';
-                    shift.businesses.forEach(biz => {
-                        let personBadge = '';
-                        if (biz.person === '骆') {
-                            personBadge = '<span class="badge badge-luo">骆</span>';
-                        } else if (biz.person === '宝') {
-                            personBadge = '<span class="badge badge-bao">宝</span>';
-                        } else if (biz.person === '委') {
-                            personBadge = '<span class="badge badge-wei">委</span>';
-                        } else {
-                            personBadge = '-';
-                        }
-                        
-                        html += `
-                            <tr>
-                                <td>${biz.name}</td>
-                                <td>${biz.count}</td>
-                                <td>${personBadge}</td>
-                            </tr>
-                        `;
-                    });
-                    html += '</tbody></table>';
-                }
-                
-                html += '</div>';
-            });
-            html += '</div>';
-            
-            // 业务统计汇总
-            html += '<div class="detail-section"><h2>📊 业务统计汇总</h2>';
-            html += '<table><thead><tr><th>业务类型</th><th>总数</th><th>人员分布</th></tr></thead><tbody>';
-            
-            Object.entries(data.businessStats).forEach(([name, stats]) => {
-                let personDist = '';
-                Object.entries(stats.persons).forEach(([person, count]) => {
-                    let badgeClass = '';
-                    if (person === '骆') badgeClass = 'badge-luo';
-                    else if (person === '宝') badgeClass = 'badge-bao';
-                    else if (person === '委') badgeClass = 'badge-wei';
-                    
-                    personDist += `<span class="badge ${badgeClass}">${person}${count}</span> `;
-                });
-                
-                html += `
-                    <tr>
-                        <td><strong>${name}</strong></td>
-                        <td>${stats.total}</td>
-                        <td>${personDist || '-'}</td>
-                    </tr>
-                `;
-            });
-            html += '</tbody></table></div>';
-            
-            // 人员统计
-            html += '<div class="detail-section"><h2>👥 人员业绩统计</h2>';
-            html += '<table><thead><tr><th>人员</th><th>总办理数</th><th>业务明细</th></tr></thead><tbody>';
-            
-            Object.entries(data.personStats).forEach(([person, stats]) => {
-                let badgeClass = '';
-                if (person === '骆') badgeClass = 'badge-luo';
-                else if (person === '宝') badgeClass = 'badge-bao';
-                else if (person === '委') badgeClass = 'badge-wei';
-                
-                let bizDetail = '';
-                Object.entries(stats.businesses).forEach(([bizName, count]) => {
-                    bizDetail += `${bizName}: ${count}<br>`;
-                });
-                
-                html += `
-                    <tr>
-                        <td><span class="badge ${badgeClass}">${person}</span></td>
-                        <td><strong>${stats.total}</strong></td>
-                        <td>${bizDetail}</td>
-                    </tr>
-                `;
-            });
-            html += '</tbody></table></div>';
-            
-            // 添加可复制的文本格式结果
+            // 添加可复制的文本格式结果（放在最上面）
             html += '<div class="detail-section"><h2>📋 可复制文本格式</h2>';
             html += '<p style="color: #666; margin-bottom: 10px;">点击下方按钮复制业务统计结果，每行格式：项目: 总数     人员分布</p>';
             html += '<button class="btn-secondary" onclick="copyBusinessStats()" style="background: #ff9800; color: white; margin-bottom: 15px;">📋 复制业务统计</button>';
@@ -780,6 +697,98 @@
             
             html += copyContent;
             html += '</textarea></div>';
+            
+            // 业务统计汇总
+            html += '<div class="detail-section"><h2>📊 业务统计汇总</h2>';
+            html += '<table><thead><tr><th>业务类型</th><th>总数</th><th>人员分布</th></tr></thead><tbody>';
+            
+            Object.entries(data.businessStats).forEach(([name, stats]) => {
+                let personDist = '';
+                Object.entries(stats.persons).forEach(([person, count]) => {
+                    let badgeClass = '';
+                    if (person === '骆') badgeClass = 'badge-luo';
+                    else if (person === '宝') badgeClass = 'badge-bao';
+                    else if (person === '委') badgeClass = 'badge-wei';
+                    else if (person === '欧') badgeClass = 'badge-ou';
+                    
+                    personDist += `<span class="badge ${badgeClass}">${person}${count}</span> `;
+                });
+                
+                html += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${stats.total}</td>
+                        <td>${personDist || '-'}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div>';
+            
+            // 人员业绩统计（放在第二位）
+            html += '<div class="detail-section"><h2>👥 人员业绩统计</h2>';
+            html += '<table><thead><tr><th>人员</th><th>总办理数</th><th>业务明细</th></tr></thead><tbody>';
+            
+            Object.entries(data.personStats).forEach(([person, stats]) => {
+                let badgeClass = '';
+                if (person === '骆') badgeClass = 'badge-luo';
+                else if (person === '宝') badgeClass = 'badge-bao';
+                else if (person === '委') badgeClass = 'badge-wei';
+                else if (person === '欧') badgeClass = 'badge-ou';
+                
+                let bizDetail = '';
+                Object.entries(stats.businesses).forEach(([bizName, count]) => {
+                    bizDetail += `${bizName}: ${count}<br>`;
+                });
+                
+                html += `
+                    <tr>
+                        <td><span class="badge ${badgeClass}">${person}</span></td>
+                        <td><strong>${stats.total}</strong></td>
+                        <td>${bizDetail}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div>';
+            
+            // 各班次详情（放在最后）
+            html += '<div class="detail-section"><h2>📅 各班次详情</h2>';
+            data.shifts.forEach((shift, index) => {
+                html += `
+                    <div class="shift-section">
+                        <h3>${shift.name}</h3>
+                        <p><strong>总呼：</strong>${shift.totalCalls} | <strong>呼通：</strong>${shift.connectedCalls}</p>
+                `;
+                
+                if (shift.businesses.length > 0) {
+                    html += '<table><thead><tr><th>业务类型</th><th>数量</th><th>人员</th></tr></thead><tbody>';
+                    shift.businesses.forEach(biz => {
+                        let personBadge = '';
+                        if (biz.person === '骆') {
+                            personBadge = '<span class="badge badge-luo">骆</span>';
+                        } else if (biz.person === '宝') {
+                            personBadge = '<span class="badge badge-bao">宝</span>';
+                        } else if (biz.person === '委') {
+                            personBadge = '<span class="badge badge-wei">委</span>';
+                        } else if (biz.person === '欧') {
+                            personBadge = '<span class="badge badge-ou">欧</span>';
+                        } else {
+                            personBadge = '-';
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td>${biz.name}</td>
+                                <td>${biz.count}</td>
+                                <td>${personBadge}</td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                }
+                
+                html += '</div>';
+            });
+            html += '</div>';
             
             resultsDiv.innerHTML = html;
         }
@@ -989,46 +998,16 @@
         
         // 示例数据加载
         window.onload = function() {
-            const exampleData = `2026.5.21全量汇总
-
-外呼升档
-
-总呼：15+50+73+15+18+19+451
-
-呼通：10+23+41+8+10+14+28=134
-
-
-融合129升档:5骆1宝
-
-小福袋枪机：1骆  
-
-黄金会员:4骆5宝
-
-融宽+新装分月FTTR :1骆
-
-138低消:1骆
-
-1元千兆:1宝1骆1委
-
-AI手机:1骆
-
- 新开59全：1骆1宝
-
-送39+:2骆
-
-360续费:1骆
-
-轻合约:1骆
-
-新业务：4骆1宝
-
-套餐延续：2骆
-
-企微：2
-
-APP：1+1+1+3=6`;
+            // 默认设置为表格格式
+            setFormat('table');
             
-            document.getElementById('dataInput').placeholder = exampleData.substring(0, 200) + '...\n\n请在此处粘贴您的完整数据';
+            const exampleData = `项目日期\t2026.5.21宝晟早班\t2026.5.22宝晟早班
+总呼\t15\t20
+接通\t8\t6
+融合129升档\t1宝3骆1委\t3骆2委
+小福袋枪机\t1骆\t2骆`;
+            
+            document.getElementById('dataInput').placeholder = exampleData + '\n\n请在此处粘贴您的完整表格数据';
         };
     </script>
 </body>
