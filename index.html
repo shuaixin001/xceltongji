@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外呼升档数据统计工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .format-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+        
+        .format-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .format-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .format-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .input-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 16px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Consolas', monospace;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .card .value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .detail-section {
+            margin-top: 30px;
+        }
+        
+        .detail-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9ff;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        
+        .badge-luo {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-bao {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .badge-wei {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .shift-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .shift-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .export-btn {
+            margin-top: 20px;
+            background: #4caf50;
+            color: white;
+        }
+        
+        .export-btn:hover {
+            background: #45a049;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+            .input-section, .btn-group {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 外呼升档数据统计工具</h1>
+            <p>粘贴原始数据，自动生成统计报表</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <label for="dataInput">📋 请粘贴原始数据：</label>
+                
+                <div class="format-selector">
+                    <button class="format-btn active" onclick="setFormat('text')" id="btnText">📝 文本格式</button>
+                    <button class="format-btn" onclick="setFormat('table')" id="btnTable">📊 表格格式</button>
+                </div>
+                
+                <textarea id="dataInput" placeholder="在此粘贴您的外呼数据..."></textarea>
+                
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="parseData()">🔍 开始统计</button>
+                    <button class="btn-secondary" onclick="clearData()">🗑️ 清空数据</button>
+                    <button class="btn-secondary export-btn" onclick="exportToExcel()">📥 导出Excel</button>
+                    <button class="btn-secondary" onclick="saveAsImage()" style="background: #9c27b0; color: white;">🖼️ 保存为图片</button>
+                </div>
+            </div>
+            
+            <div id="results" class="results">
+                <!-- 统计结果将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let parsedData = {};
+        let currentFormat = 'text'; // 'text' 或 'table'
+        
+        function setFormat(format) {
+            currentFormat = format;
+            document.getElementById('btnText').classList.toggle('active', format === 'text');
+            document.getElementById('btnTable').classList.toggle('active', format === 'table');
+            
+            const textarea = document.getElementById('dataInput');
+            if (format === 'text') {
+                textarea.placeholder = `在此粘贴文本格式数据，例如：
+
+2026.5.21宝晟早班
+外呼升档
+总呼：15
+接通：8
+融合129升档：3骆1委
+小福袋枪机：1骆`;
+            } else {
+                textarea.placeholder = `在此粘贴表格格式数据（从Excel或手机复制），例如：
+
+项目日期\t2026.5.21宝晟早班\t2026.5.22宝晟早班
+总呼\t15\t50
+接通\t8\t6
+融合129升档\t3骆1委\t3骆2委
+小福袋枪机\t1骆\t2骆`;
+            }
+        }
+        
+        function parseData() {
+            const input = document.getElementById('dataInput').value;
+            if (!input.trim()) {
+                alert('请先粘贴数据！');
+                return;
+            }
+            
+            // 根据格式选择不同的解析方式
+            if (currentFormat === 'table') {
+                parsedData = analyzeTableData(input);
+            } else {
+                parsedData = analyzeTextData(input);
+            }
+            
+            displayResults(parsedData);
+        }
+        
+        // 文本格式解析（原逻辑）
+        function analyzeTextData(text) {
+            const result = {
+                totalCalls: 0,
+                connectedCalls: 0,
+                shifts: [],
+                businessStats: {},
+                personStats: {}
+            };
+            
+            // 按日期分组
+            const datePattern = /(\d{4}\.\d{1,2}\.\d{1,2})/g;
+            const lines = text.split('\n');
+            
+            let currentShift = null;
+            let currentDate = '';
+            
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line) return;
+                
+                // 检测日期
+                const dateMatch = line.match(datePattern);
+                if (dateMatch) {
+                    currentDate = dateMatch[0];
+                }
+                
+                // 检测班次
+                if (line.includes('早班') || line.includes('晚班') || line.includes('直落班')) {
+                    currentShift = {
+                        date: currentDate,
+                        name: line,
+                        totalCalls: 0,
+                        connectedCalls: 0,
+                        businesses: []
+                    };
+                    result.shifts.push(currentShift);
+                }
+                
+                // 提取总呼
+                const totalCallMatch = line.match(/总呼[：:]?\s*(\d+)/);
+                if (totalCallMatch && currentShift) {
+                    currentShift.totalCalls = parseInt(totalCallMatch[1]);
+                    result.totalCalls += parseInt(totalCallMatch[1]);
+                }
+                
+                // 提取呼通/接通
+                const connectedMatch = line.match(/(?:呼通|接通)[：:]?\s*(\d+)/);
+                if (connectedMatch && currentShift) {
+                    currentShift.connectedCalls = parseInt(connectedMatch[1]);
+                    result.connectedCalls += parseInt(connectedMatch[1]);
+                }
+                
+                // 提取业务办理（包含人员标记）
+                const businessMatch = line.match(/(.+?)[：:]\s*(\d+)([骆宝委]+)/);
+                if (businessMatch && currentShift) {
+                    const businessName = businessMatch[1].trim();
+                    const count = parseInt(businessMatch[2]);
+                    const person = businessMatch[3];
+                    
+                    currentShift.businesses.push({
+                        name: businessName,
+                        count: count,
+                        person: person
+                    });
+                    
+                    // 统计业务
+                    if (!result.businessStats[businessName]) {
+                        result.businessStats[businessName] = { total: 0, persons: {} };
+                    }
+                    result.businessStats[businessName].total += count;
+                    result.businessStats[businessName].persons[person] = 
+                        (result.businessStats[businessName].persons[person] || 0) + count;
+                    
+                    // 统计人员
+                    if (!result.personStats[person]) {
+                        result.personStats[person] = { total: 0, businesses: {} };
+                    }
+                    result.personStats[person].total += count;
+                    result.personStats[person].businesses[businessName] = 
+                        (result.personStats[person].businesses[businessName] || 0) + count;
+                }
+                
+                // 提取企微和APP
+                const qiweiMatch = line.match(/企微[：:]?\s*(\d+)/);
+                if (qiweiMatch && currentShift) {
+                    currentShift.businesses.push({
+                        name: '企微',
+                        count: parseInt(qiweiMatch[1]),
+                        person: '-'
+                    });
+                    
+                    if (!result.businessStats['企微']) {
+                        result.businessStats['企微'] = { total: 0, persons: {} };
+                    }
+                    result.businessStats['企微'].total += parseInt(qiweiMatch[1]);
+                }
+                
+                const appMatch = line.match(/APP[：:]?\s*([\d+\s]+)/);
+                if (appMatch && currentShift) {
+                    const appStr = appMatch[1].trim();
+                    const appTotal = appStr.split('+').reduce((sum, num) => sum + parseInt(num.trim()), 0);
+                    
+                    currentShift.businesses.push({
+                        name: 'APP',
+                        count: appTotal,
+                        person: '-',
+                        detail: appStr
+                    });
+                    
+                    if (!result.businessStats['APP']) {
+                        result.businessStats['APP'] = { total: 0, persons: {} };
+                    }
+                    result.businessStats['APP'].total += appTotal;
+                }
+            });
+            
+            return result;
+        }
+        
+        // 表格格式解析
+        function analyzeTableData(text) {
+            const result = {
+                totalCalls: 0,
+                connectedCalls: 0,
+                shifts: [],
+                businessStats: {},
+                personStats: {}
+            };
+            
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length < 2) return result;
+            
+            // 第一行是表头（日期/班次）
+            const headers = lines[0].split(/\t|[,，]/).map(h => h.trim()).filter(h => h);
+            
+            console.log('表头:', headers);
+            
+            // 解析每一行数据
+            for (let i = 1; i < lines.length; i++) {
+                const cells = lines[i].split(/\t|[,，]/).map(c => c.trim()).filter(c => c);
+                if (cells.length < 2) continue;
+                
+                const metricName = cells[0]; // 指标名称（如：总呼、接通等）
+                
+                console.log(`处理第${i}行:`, metricName, cells);
+                
+                // 遍历每个班次列
+                for (let j = 1; j < cells.length && j < headers.length; j++) {
+                    const cellValue = cells[j];
+                    const shiftName = headers[j];
+                    
+                    if (!cellValue || cellValue === '-') continue;
+                    
+                    // 找到或创建班次对象
+                    let shift = result.shifts.find(s => s.name === shiftName);
+                    if (!shift) {
+                        shift = {
+                            date: shiftName.match(/\d{4}\.\d{1,2}\.\d{1,2}/)?.[0] || '',
+                            name: shiftName,
+                            totalCalls: 0,
+                            connectedCalls: 0,
+                            businesses: []
+                        };
+                        result.shifts.push(shift);
+                    }
+                    
+                    try {
+                        // 解析不同指标
+                        if (metricName === '总呼') {
+                            const num = parseInt(cellValue) || 0;
+                            shift.totalCalls = num;
+                            result.totalCalls += num;
+                            
+                            // 同时加入业务统计
+                            shift.businesses.push({ name: '总呼', count: num, person: '-' });
+                            if (!result.businessStats['总呼']) {
+                                result.businessStats['总呼'] = { total: 0, persons: {} };
+                            }
+                            result.businessStats['总呼'].total += num;
+                        } else if (metricName === '接通' || metricName === '呼通') {
+                            const num = parseInt(cellValue) || 0;
+                            shift.connectedCalls = num;
+                            result.connectedCalls += num;
+                            
+                            // 同时加入业务统计
+                            const displayName = metricName === '呼通' ? '呼通' : '接通';
+                            shift.businesses.push({ name: displayName, count: num, person: '-' });
+                            if (!result.businessStats[displayName]) {
+                                result.businessStats[displayName] = { total: 0, persons: {} };
+                            }
+                            result.businessStats[displayName].total += num;
+                        } else if (metricName === '企微') {
+                            const num = parseInt(cellValue) || 0;
+                            shift.businesses.push({ name: '企微', count: num, person: '-' });
+                            if (!result.businessStats['企微']) {
+                                result.businessStats['企微'] = { total: 0, persons: {} };
+                            }
+                            result.businessStats['企微'].total += num;
+                        } else if (metricName === 'APP') {
+                            // APP可能有多个数字相加，如 "1+1+1+3=6"
+                            let appTotal = 0;
+                            const match = cellValue.match(/=(\d+)$/);
+                            if (match) {
+                                appTotal = parseInt(match[1]);
+                            } else {
+                                appTotal = cellValue.split('+').reduce((sum, num) => sum + (parseInt(num.trim()) || 0), 0);
+                            }
+                            shift.businesses.push({ name: 'APP', count: appTotal, person: '-', detail: cellValue });
+                            if (!result.businessStats['APP']) {
+                                result.businessStats['APP'] = { total: 0, persons: {} };
+                            }
+                            result.businessStats['APP'].total += appTotal;
+                        } else {
+                            // 其他业务类型，解析人员和数量（排除总呼和接通）
+                            const businessInfo = parseBusinessWithPersons(cellValue);
+                            if (businessInfo.total > 0) {
+                                // 为每个人员分别添加记录
+                                Object.entries(businessInfo.persons).forEach(([person, count]) => {
+                                    shift.businesses.push({
+                                        name: metricName,
+                                        count: count,
+                                        person: person
+                                    });
+                                });
+                                
+                                // 统计业务
+                                if (!result.businessStats[metricName]) {
+                                    result.businessStats[metricName] = { total: 0, persons: {} };
+                                }
+                                result.businessStats[metricName].total += businessInfo.total;
+                                
+                                // 统计人员
+                                Object.entries(businessInfo.persons).forEach(([person, count]) => {
+                                    result.businessStats[metricName].persons[person] = 
+                                        (result.businessStats[metricName].persons[person] || 0) + count;
+                                    
+                                    if (!result.personStats[person]) {
+                                        result.personStats[person] = { total: 0, businesses: {} };
+                                    }
+                                    result.personStats[person].total += count;
+                                    result.personStats[person].businesses[metricName] = 
+                                        (result.personStats[person].businesses[metricName] || 0) + count;
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error(`解析错误 [${metricName}, ${shiftName}, ${cellValue}]:`, e);
+                    }
+                }
+            }
+            
+            console.log('解析结果:', result);
+            return result;
+        }
+        
+        // 解析包含人员的业务数据，如 "3骆1委" 或 "1宝1骆1委"
+        function parseBusinessWithPersons(text) {
+            const result = { total: 0, persons: {} };
+            
+            // 清理空格和特殊字符
+            text = text.trim().replace(/\s+/g, '');
+            
+            // 匹配模式：数字+人员标记（支持多个组合）
+            const pattern = /(\d+)\s*([骆宝委])/g;
+            let match;
+            
+            while ((match = pattern.exec(text)) !== null) {
+                const count = parseInt(match[1]);
+                const person = match[2];
+                result.total += count;
+                result.persons[person] = (result.persons[person] || 0) + count;
+            }
+            
+            return result;
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.classList.add('show');
+            
+            console.log('显示数据:', data);
+            console.log('业务统计:', data.businessStats);
+            console.log('人员统计:', data.personStats);
+            
+            let html = '';
+            
+            // 总体统计卡片
+            html += `
+                <div class="summary-cards">
+                    <div class="card">
+                        <h3>总呼叫数</h3>
+                        <div class="value">${data.totalCalls}</div>
+                    </div>
+                    <div class="card">
+                        <h3>总呼通数</h3>
+                        <div class="value">${data.connectedCalls}</div>
+                    </div>
+                    <div class="card">
+                        <h3>呼通率</h3>
+                        <div class="value">${data.totalCalls > 0 ? ((data.connectedCalls/data.totalCalls)*100).toFixed(1) : 0}%</div>
+                    </div>
+                    <div class="card">
+                        <h3>班次数量</h3>
+                        <div class="value">${data.shifts.length}</div>
+                    </div>
+                </div>
+            `;
+            
+            // 各班次详情
+            html += '<div class="detail-section"><h2>📅 各班次详情</h2>';
+            data.shifts.forEach((shift, index) => {
+                html += `
+                    <div class="shift-section">
+                        <h3>${shift.name}</h3>
+                        <p><strong>总呼：</strong>${shift.totalCalls} | <strong>呼通：</strong>${shift.connectedCalls}</p>
+                `;
+                
+                if (shift.businesses.length > 0) {
+                    html += '<table><thead><tr><th>业务类型</th><th>数量</th><th>人员</th></tr></thead><tbody>';
+                    shift.businesses.forEach(biz => {
+                        let personBadge = '';
+                        if (biz.person === '骆') {
+                            personBadge = '<span class="badge badge-luo">骆</span>';
+                        } else if (biz.person === '宝') {
+                            personBadge = '<span class="badge badge-bao">宝</span>';
+                        } else if (biz.person === '委') {
+                            personBadge = '<span class="badge badge-wei">委</span>';
+                        } else {
+                            personBadge = '-';
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td>${biz.name}</td>
+                                <td>${biz.count}</td>
+                                <td>${personBadge}</td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                }
+                
+                html += '</div>';
+            });
+            html += '</div>';
+            
+            // 业务统计汇总
+            html += '<div class="detail-section"><h2>📊 业务统计汇总</h2>';
+            html += '<table><thead><tr><th>业务类型</th><th>总数</th><th>人员分布</th></tr></thead><tbody>';
+            
+            Object.entries(data.businessStats).forEach(([name, stats]) => {
+                let personDist = '';
+                Object.entries(stats.persons).forEach(([person, count]) => {
+                    let badgeClass = '';
+                    if (person === '骆') badgeClass = 'badge-luo';
+                    else if (person === '宝') badgeClass = 'badge-bao';
+                    else if (person === '委') badgeClass = 'badge-wei';
+                    
+                    personDist += `<span class="badge ${badgeClass}">${person}${count}</span> `;
+                });
+                
+                html += `
+                    <tr>
+                        <td><strong>${name}</strong></td>
+                        <td>${stats.total}</td>
+                        <td>${personDist || '-'}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div>';
+            
+            // 人员统计
+            html += '<div class="detail-section"><h2>👥 人员业绩统计</h2>';
+            html += '<table><thead><tr><th>人员</th><th>总办理数</th><th>业务明细</th></tr></thead><tbody>';
+            
+            Object.entries(data.personStats).forEach(([person, stats]) => {
+                let badgeClass = '';
+                if (person === '骆') badgeClass = 'badge-luo';
+                else if (person === '宝') badgeClass = 'badge-bao';
+                else if (person === '委') badgeClass = 'badge-wei';
+                
+                let bizDetail = '';
+                Object.entries(stats.businesses).forEach(([bizName, count]) => {
+                    bizDetail += `${bizName}: ${count}<br>`;
+                });
+                
+                html += `
+                    <tr>
+                        <td><span class="badge ${badgeClass}">${person}</span></td>
+                        <td><strong>${stats.total}</strong></td>
+                        <td>${bizDetail}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table></div>';
+            
+            // 添加可复制的文本格式结果
+            html += '<div class="detail-section"><h2>📋 可复制文本格式</h2>';
+            html += '<p style="color: #666; margin-bottom: 10px;">点击下方按钮复制业务统计结果，每行格式：项目: 总数     人员分布</p>';
+            html += '<button class="btn-secondary" onclick="copyBusinessStats()" style="background: #ff9800; color: white; margin-bottom: 15px;">📋 复制业务统计</button>';
+            html += '<textarea id="copyText" readonly style="width: 100%; min-height: 200px; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: Consolas, monospace; background: #f8f9ff;">';
+            
+            // 生成可复制的文本
+            let copyContent = '';
+            Object.entries(data.businessStats).forEach(([name, stats]) => {
+                let personDist = '';
+                if (Object.keys(stats.persons).length > 0) {
+                    // 按人员排序：宝、骆、委、欧
+                    const personOrder = ['宝', '骆', '委', '欧'];
+                    personOrder.forEach(person => {
+                        if (stats.persons[person]) {
+                            personDist += `${person}${stats.persons[person]} `;
+                        }
+                    });
+                    personDist = personDist.trim();
+                } else {
+                    personDist = '-';
+                }
+                copyContent += `${name}: ${stats.total}     ${personDist}\n`;
+            });
+            
+            html += copyContent;
+            html += '</textarea></div>';
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function copyBusinessStats() {
+            const textarea = document.getElementById('copyText');
+            textarea.select();
+            textarea.setSelectionRange(0, 99999); // 兼容移动端
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('✅ 已复制到剪贴板！');
+                } else {
+                    showToast('❌ 复制失败，请手动复制');
+                }
+            } catch (err) {
+                console.error('复制失败:', err);
+                showToast('❌ 复制失败，请手动复制');
+            }
+        }
+        
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 15px 30px;
+                border-radius: 8px;
+                font-size: 16px;
+                z-index: 10000;
+                animation: fadeInOut 2s ease-in-out;
+            `;
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInOut {
+                    0% { opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 2000);
+        }
+        
+        function saveAsImage() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!resultsDiv.classList.contains('show')) {
+                alert('请先统计数据！');
+                return;
+            }
+            
+            // 显示加载提示
+            showToast('⏳ 正在生成图片...');
+            
+            // 临时隐藏可复制文本区域（避免图片太大）
+            const copySection = resultsDiv.querySelector('.detail-section:last-child');
+            if (copySection) {
+                copySection.style.display = 'none';
+            }
+            
+            html2canvas(resultsDiv, {
+                scale: 2, // 提高清晰度
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                windowWidth: resultsDiv.scrollWidth,
+                windowHeight: resultsDiv.scrollHeight
+            }).then(canvas => {
+                // 恢复显示
+                if (copySection) {
+                    copySection.style.display = 'block';
+                }
+                
+                // 转换为图片并下载
+                canvas.toBlob(blob => {
+                    const link = document.createElement('a');
+                    link.download = `外呼统计_${new Date().toLocaleDateString()}.png`;
+                    link.href = URL.createObjectURL(blob);
+                    link.click();
+                    
+                    showToast('✅ 图片已保存！');
+                }, 'image/png');
+            }).catch(err => {
+                console.error('生成图片失败:', err);
+                if (copySection) {
+                    copySection.style.display = 'block';
+                }
+                showToast('❌ 生成图片失败');
+            });
+        }
+        
+        function clearData() {
+            document.getElementById('dataInput').value = '';
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function exportToExcel() {
+            if (!parsedData.shifts || parsedData.shifts.length === 0) {
+                alert('请先统计数据！');
+                return;
+            }
+            
+            // 创建带公式的Excel HTML格式
+            let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+            html += '<head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>外呼统计</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>';
+            
+            // Sheet 1: 原始数据
+            html += '<h2>原始数据明细</h2>';
+            html += '<table border="1">';
+            html += '<tr><th>日期</th><th>班次</th><th>总呼</th><th>接通</th><th>业务类型</th><th>数量</th><th>人员</th></tr>';
+            
+            let row = 2; // Excel行号（从第2行开始，第1行是表头）
+            parsedData.shifts.forEach(shift => {
+                shift.businesses.forEach(biz => {
+                    html += `<tr>`;
+                    html += `<td>${shift.date}</td>`;
+                    html += `<td>${shift.name}</td>`;
+                    html += `<td>${shift.totalCalls}</td>`;
+                    html += `<td>${shift.connectedCalls}</td>`;
+                    html += `<td>${biz.name}</td>`;
+                    html += `<td>${biz.count}</td>`;
+                    html += `<td>${biz.person}</td>`;
+                    html += `</tr>`;
+                    row++;
+                });
+            });
+            html += '</table>';
+            
+            // Sheet 2: 业务统计汇总（带公式）
+            html += '<br/><br/><h2>业务统计汇总</h2>';
+            html += '<table border="1">';
+            html += '<tr><th>业务类型</th><th>总数</th><th>计算公式</th></tr>';
+            
+            const businessNames = Object.keys(parsedData.businessStats);
+            businessNames.forEach((bizName, index) => {
+                const stats = parsedData.businessStats[bizName];
+                const excelRow = index + 2; // Excel行号
+                
+                html += '<tr>';
+                html += `<td>${bizName}</td>`;
+                html += `<td>${stats.total}</td>`;
+                html += `<td>=SUMIF(F:F,"${bizName}",F:F)</td>`; // Excel公式示例
+                html += '</tr>';
+            });
+            html += '</table>';
+            
+            // Sheet 3: 人员业绩统计（带公式）
+            html += '<br/><br/><h2>人员业绩统计</h2>';
+            html += '<table border="1">';
+            html += '<tr><th>人员</th><th>总办理数</th><th>计算公式</th></tr>';
+            
+            const personNames = Object.keys(parsedData.personStats);
+            personNames.forEach((person, index) => {
+                const stats = parsedData.personStats[person];
+                const excelRow = index + 2;
+                
+                html += '<tr>';
+                html += `<td>${person}</td>`;
+                html += `<td>${stats.total}</td>`;
+                html += `<td>=SUMIF(G:G,"${person}",F:F)</td>`; // Excel公式示例
+                html += '</tr>';
+            });
+            html += '</table>';
+            
+            // Sheet 4: 各班次详情
+            html += '<br/><br/><h2>各班次详情</h2>';
+            html += '<table border="1">';
+            html += '<tr><th>日期</th><th>班次</th><th>总呼</th><th>接通</th><th>呼通率</th><th>业务数量</th></tr>';
+            
+            parsedData.shifts.forEach((shift, index) => {
+                const connectRate = shift.totalCalls > 0 ? ((shift.connectedCalls/shift.totalCalls)*100).toFixed(1) + '%' : '0%';
+                html += '<tr>';
+                html += `<td>${shift.date}</td>`;
+                html += `<td>${shift.name}</td>`;
+                html += `<td>${shift.totalCalls}</td>`;
+                html += `<td>${shift.connectedCalls}</td>`;
+                html += `<td>${connectRate}</td>`;
+                html += `<td>${shift.businesses.length}</td>`;
+                html += '</tr>';
+            });
+            html += '</table>';
+            
+            html += '</body></html>';
+            
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `外呼统计_${new Date().toLocaleDateString()}.xls`;
+            link.click();
+        }
+        
+        // 示例数据加载
+        window.onload = function() {
+            const exampleData = `2026.5.21全量汇总
+
+外呼升档
+
+总呼：15+50+73+15+18+19+451
+
+呼通：10+23+41+8+10+14+28=134
+
+
+融合129升档:5骆1宝
+
+小福袋枪机：1骆  
+
+黄金会员:4骆5宝
+
+融宽+新装分月FTTR :1骆
+
+138低消:1骆
+
+1元千兆:1宝1骆1委
+
+AI手机:1骆
+
+ 新开59全：1骆1宝
+
+送39+:2骆
+
+360续费:1骆
+
+轻合约:1骆
+
+新业务：4骆1宝
+
+套餐延续：2骆
+
+企微：2
+
+APP：1+1+1+3=6`;
+            
+            document.getElementById('dataInput').placeholder = exampleData.substring(0, 200) + '...\n\n请在此处粘贴您的完整数据';
+        };
+    </script>
+</body>
+</html>
