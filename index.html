@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>外呼升档数据统计工具</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
@@ -15,8 +15,9 @@
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            padding: 10px;
             min-height: 100vh;
+            -webkit-text-size-adjust: 100%;
         }
         
         .container {
@@ -26,6 +27,87 @@
             border-radius: 15px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             overflow: hidden;
+        }
+        
+        /* 移动端优化 */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 15px 10px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .header p {
+                font-size: 12px;
+            }
+            
+            .content {
+                padding: 10px;
+            }
+            
+            textarea {
+                min-height: 200px;
+                font-size: 13px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            button {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .format-selector {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .format-btn {
+                width: 100%;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .card .value {
+                font-size: 24px;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+            }
+            
+            .shift-section {
+                padding: 10px;
+            }
+            
+            .detail-section h2 {
+                font-size: 18px;
+            }
         }
         
         .header {
@@ -185,6 +267,12 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 3px solid #667eea;
+        }
+        
+        /* 表格容器，支持横向滚动 */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         table {
@@ -700,6 +788,7 @@
             
             // 业务统计汇总
             html += '<div class="detail-section"><h2>📊 业务统计汇总</h2>';
+            html += '<div class="table-wrapper">';
             html += '<table><thead><tr><th>业务类型</th><th>总数</th><th>人员分布</th></tr></thead><tbody>';
             
             Object.entries(data.businessStats).forEach(([name, stats]) => {
@@ -722,10 +811,11 @@
                     </tr>
                 `;
             });
-            html += '</tbody></table></div>';
+            html += '</tbody></table></div></div>';
             
             // 人员业绩统计（放在第二位）
             html += '<div class="detail-section"><h2>👥 人员业绩统计</h2>';
+            html += '<div class="table-wrapper">';
             html += '<table><thead><tr><th>人员</th><th>总办理数</th><th>业务明细</th></tr></thead><tbody>';
             
             Object.entries(data.personStats).forEach(([person, stats]) => {
@@ -748,7 +838,7 @@
                     </tr>
                 `;
             });
-            html += '</tbody></table></div>';
+            html += '</tbody></table></div></div>';
             
             // 各班次详情（放在最后）
             html += '<div class="detail-section"><h2>📅 各班次详情</h2>';
@@ -760,6 +850,7 @@
                 `;
                 
                 if (shift.businesses.length > 0) {
+                    html += '<div class="table-wrapper">';
                     html += '<table><thead><tr><th>业务类型</th><th>数量</th><th>人员</th></tr></thead><tbody>';
                     shift.businesses.forEach(biz => {
                         let personBadge = '';
@@ -783,7 +874,7 @@
                             </tr>
                         `;
                     });
-                    html += '</tbody></table>';
+                    html += '</tbody></table></div>';
                 }
                 
                 html += '</div>';
